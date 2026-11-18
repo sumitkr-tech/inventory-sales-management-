@@ -1,0 +1,15 @@
+product_id,name,category,price,quantity
+PRD101,Wireless Optical Mouse,Electronics,24.99,34
+PRD102,Mechanical Keyboard (RGB),Electronics,69.50,18
+PRD103,Noise Cancelling Headphones,Electronics,129.99,8
+PRD104,USB-C Fast Charging Cable (2m),Electronics,12.50,4
+PRD105,Organic Colombian Coffee (500g),Groceries,14.99,50
+PRD106,Extra Virgin Olive Oil (1L),Groceries,18.00,22
+PRD107,Almond Milk Unsweetened (1L),Groceries,4.25,3
+PRD108,Dark Chocolate Bar 85% (100g),Groceries,3.75,45
+PRD109,Classic Cotton Crew T-Shirt,Clothing,19.99,40
+PRD110,Denim Slim Fit Jeans,Clothing,49.99,15
+PRD111,Wool Blend Winter Scarf,Clothing,22.00,5
+PRD112,Hardcover Ruled Notebook A5,Stationery,8.50,60
+PRD113,Gel Pen Set 12 Colors,Stationery,11.20,25
+PRD114,Ergonomic Desk Gel Pad,Stationery,15.00,2

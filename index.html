@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaStock - Inventory & Sales Management System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="app-navbar">
+        <div class="navbar-inner">
+            <div class="brand-container">
+                <div class="brand-icon">⚡</div>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="brand-title">NovaStock</span>
+                        <span class="brand-badge">PRO POS & INVENTORY</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav>
+                <ul class="nav-links">
+                    <li><a class="nav-item active" data-tab="tab-dashboard">📊 Dashboard</a></li>
+                    <li><a class="nav-item" data-tab="tab-inventory">📦 Inventory</a></li>
+                    <li><a class="nav-item" data-tab="tab-pos">🛒 POS / Billing</a></li>
+                    <li>
+                        <a class="nav-item" data-tab="tab-lowstock">
+                            ⚠️ Low Stock <span class="badge-pill" id="nav-lowstock-badge">0</span>
+                        </a>
+                    </li>
+                    <li><a class="nav-item" data-tab="tab-sales">🧾 Sales History</a></li>
+                    <li><a class="nav-item" data-tab="tab-analytics">📈 Analytics & Graphs</a></li>
+                </ul>
+            </nav>
+
+            <div class="navbar-actions" style="display: flex; align-items: center; gap: 8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" style="min-width: 36px; padding: 6px 10px;">
+                    🌙
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-sound-toggle" onclick="toggleSound()" title="Toggle Audio Sound FX" style="min-width: 36px; padding: 6px 10px;">
+                    🔊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+
+        <!-- Top Global Metrics (KPIs) -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-info">
+                    <h4>Total Inventory Value</h4>
+                    <div class="metric-value" id="kpi-inventory-val">$0.00</div>
+                    <div class="metric-sub" id="kpi-stock-units">0 total units across catalog</div>
+                </div>
+                <div class="metric-icon-box cyan">💎</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-info">
+                    <h4>Total Revenue</h4>
+                    <div class="metric-value" id="kpi-total-revenue">$0.00</div>
+                    <div class="metric-sub" id="kpi-total-orders">0 completed orders</div>
+                </div>
+                <div class="metric-icon-box emerald">💰</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-info">
+                    <h4>Active Products</h4>
+                    <div class="metric-value" id="kpi-product-count">0</div>
+                    <div class="metric-sub" id="kpi-category-count">Across multiple categories</div>
+                </div>
+                <div class="metric-icon-box indigo">📦</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-info">
+                    <h4>Low Stock Warning</h4>
+                    <div class="metric-value" id="kpi-lowstock-count" style="color: #fb7185;">0</div>
+                    <div class="metric-sub">Items requiring immediate restock</div>
+                </div>
+                <div class="metric-icon-box rose">⚠️</div>
+            </div>
+        </div>
+
+        <!-- Global Low Stock Warning Banner (Conditional) -->
+        <div class="alert-banner" id="low-stock-banner" style="display: none;">
+            <div class="alert-left">
+                <div class="alert-badge-icon">🚨</div>
+                <div>
+                    <div class="alert-title">Low Stock Alert Triggered!</div>
+                    <div class="alert-desc" id="low-stock-banner-text">Multiple items are at or below 5 units. Please restock to avoid order cancellation.</div>
+                </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('tab-lowstock')">Review Low Stock &rarr;</button>
+        </div>
+
+        <!-- ==================== TAB 1: DASHBOARD ==================== -->
+        <div class="tab-content active" id="tab-dashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700;">Retail Operations Dashboard</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.88rem;">Overview of live inventory status, sales performance, and recent invoices.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="openAddProductModal()">+ Add New Product</button>
+                    <button class="btn btn-emerald" onclick="switchTab('tab-pos')">🛒 Open POS Register</button>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <!-- Recent Transactions -->
+                <div class="table-card">
+                    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 1rem; font-weight: 600;">Recent Sales Invoices</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="switchTab('tab-sales')">View All &rarr;</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table" id="dashboard-recent-sales">
+                            <thead>
+                                <tr>
+                                    <th>Invoice ID</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Units</th>
+                                    <th>Total ($)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Loaded dynamically via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick Restock Watchlist -->
+                <div class="table-card" style="height: fit-content;">
+                    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 1rem; font-weight: 600; color: #fb7185;">Low Stock Watchlist</h3>
+                        <span class="badge badge-danger" id="dashboard-low-badge">0 items</span>
+                    </div>
+                    <div style="padding: 12px; max-height: 380px; overflow-y: auto;" id="dashboard-low-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: INVENTORY ==================== -->
+        <div class="tab-content" id="tab-inventory">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="inventory-search" placeholder="Search by name, ID, or category..." oninput="debounceInventorySearch()">
+                    </div>
+
+                    <select class="select-filter" id="inventory-cat-filter" onchange="loadInventoryTable()">
+                        <option value="">All Categories</option>
+                    </select>
+
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 0.82rem; color: var(--text-secondary);">Sort By:</span>
+                        <select class="select-filter" id="inventory-sort-by" onchange="loadInventoryTable()">
+                            <option value="name">Product Name</option>
+                            <option value="price">Price ($)</option>
+                            <option value="quantity">Stock Quantity</option>
+                            <option value="sales">Sales (Units Sold)</option>
+                            <option value="id">Product ID</option>
+                        </select>
+                        <select class="select-filter" id="inventory-sort-order" onchange="loadInventoryTable()">
+                            <option value="asc">Ascending ⬆️</option>
+                            <option value="desc">Descending ⬇️</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="toolbar-right">
+                    <button class="btn btn-secondary btn-sm" onclick="exportInventoryCSV()">📥 Download CSV</button>
+                    <button class="btn btn-primary" onclick="openAddProductModal()">+ Add Product</button>
+                </div>
+            </div>
+
+            <!-- Inventory Data Table -->
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="custom-table" id="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Product ID</th>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Unit Price</th>
+                                <th>In Stock</th>
+                                <th>Stock Valuation</th>
+                                <th>Units Sold</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Loaded dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: POS / BILLING ==================== -->
+        <div class="tab-content" id="tab-pos">
+            <div class="pos-grid">
+                <!-- Products Selection Column -->
+                <div class="pos-catalog-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700;">Product Catalog</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="pos-search" class="form-control" style="width: 220px; padding: 7px 12px; font-size: 0.85rem;" placeholder="Quick filter products..." oninput="filterPOSProducts()">
+                            <select class="select-filter" id="pos-cat-filter" style="padding: 7px 12px; font-size: 0.85rem;" onchange="filterPOSProducts()">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pos-products-grid" id="pos-products-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Billing & Checkout Column -->
+                <div class="pos-cart-panel">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                        <span>🧾</span> New Sale Bill / Invoice
+                    </h3>
+
+                    <!-- Exception Notification Banner in POS -->
+                    <div class="exception-box" id="pos-exception-box">
+                        <div class="exception-title" id="pos-exception-title">Stock Error</div>
+                        <div class="exception-msg" id="pos-exception-msg">Requested quantity exceeds available stock!</div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" id="pos-customer" class="form-control" value="Walk-in Customer">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">Payment Method</label>
+                        <select id="pos-payment" class="form-control">
+                            <option value="Cash">Cash</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="UPI / Mobile">UPI / Mobile Wallet</option>
+                        </select>
+                    </div>
+
+                    <!-- Cart Items -->
+                    <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+                        Selected Items (<span id="cart-item-count">0</span>)
+                    </div>
+
+                    <div class="cart-items-container" id="pos-cart-items">
+                        <div style="text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 0.85rem;">
+                            No items in bill yet.<br>Click any product on the left to add.
+                        </div>
+                    </div>
+
+                    <!-- Summary & Bill Calculation -->
+                    <div>
+                        <div class="cart-summary-line">
+                            <span>Subtotal:</span>
+                            <span class="mono-cell" id="pos-subtotal">$0.00</span>
+                        </div>
+                        <div class="cart-summary-line" style="align-items: center;">
+                            <span>Discount:</span>
+                            <select id="pos-discount" class="select-filter" style="padding: 4px 8px; font-size: 0.8rem; width: 105px;" onchange="renderCart()">
+                                <option value="0">0% None</option>
+                                <option value="5">5% Promo</option>
+                                <option value="10">10% Student</option>
+                                <option value="15">15% Clearance</option>
+                                <option value="20">20% VIP</option>
+                            </select>
+                        </div>
+                        <div class="cart-summary-line" id="pos-discount-line" style="display: none; color: #34d399;">
+                            <span>Discount Saved:</span>
+                            <span class="mono-cell" id="pos-discount-amt">-$0.00</span>
+                        </div>
+                        <div class="cart-summary-line">
+                            <span>Sales Tax (5%):</span>
+                            <span class="mono-cell" id="pos-tax">$0.00</span>
+                        </div>
+                        <div class="cart-summary-line total">
+                            <span>Total Bill:</span>
+                            <span class="mono-cell" id="pos-total" style="color: #38bdf8;">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 18px; display: flex; gap: 10px;">
+                        <button class="btn btn-secondary btn-sm" onclick="clearCart()" style="flex: 1;">Clear Cart</button>
+                        <button class="btn btn-emerald" onclick="submitSaleOrder()" style="flex: 2; justify-content: center; font-size: 0.95rem;">
+                            💳 Complete Sale & Bill
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 4: LOW STOCK ALERTS ==================== -->
+        <div class="tab-content" id="tab-lowstock">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700; color: #fb7185;">Low Stock Inventory Management</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.88rem;">Products with stock quantity &le; 5 units requiring replenishment.</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Threshold:</span>
+                    <input type="number" id="low-stock-threshold-input" value="5" min="1" max="50" class="form-control" style="width: 80px;" onchange="loadLowStockTab()">
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="custom-table" id="lowstock-table">
+                        <thead>
+                            <tr>
+                                <th>Product ID</th>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Unit Price</th>
+                                <th>Stock Status</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Loaded dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 5: SALES HISTORY ==================== -->
+        <div class="tab-content" id="tab-sales">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700;">Sales History & Invoices</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.88rem;">Complete audit log of sales transactions stored in sales.csv.</p>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="exportSalesCSV()">📥 Download Sales CSV</button>
+            </div>
+
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="custom-table" id="sales-history-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice ID</th>
+                                <th>Timestamp</th>
+                                <th>Customer Name</th>
+                                <th>Payment Method</th>
+                                <th>Items Count</th>
+                                <th>Subtotal</th>
+                                <th>Tax (5%)</th>
+                                <th>Grand Total</th>
+                                <th style="text-align: right;">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 6: ANALYTICS & GRAPHS ==================== -->
+        <div class="tab-content" id="tab-analytics">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700;">Sales Analytics & Visual Graphs</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.88rem;">Powered by Python Pandas data manipulation and Matplotlib visualization.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary btn-sm" onclick="loadAnalyticsData()">🔄 Refresh Analytics</button>
+                    <button class="btn btn-secondary btn-sm" onclick="resetDemoData()">⚡ Re-seed Sample Data</button>
+                </div>
+            </div>
+
+            <!-- Pandas Summary Strip -->
+            <div class="metrics-grid" style="margin-bottom: 24px;">
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <h4>Average Order Value</h4>
+                        <div class="metric-value" id="pandas-aov">$0.00</div>
+                        <div class="metric-sub">Calculated via Pandas Groupby</div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <h4>Top Selling Product</h4>
+                        <div class="metric-value" id="pandas-top-product" style="font-size: 1.25rem;">N/A</div>
+                        <div class="metric-sub">By cumulative revenue</div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <h4>Top Category</h4>
+                        <div class="metric-value" id="pandas-top-category" style="font-size: 1.25rem;">N/A</div>
+                        <div class="metric-sub">Highest performing segment</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Matplotlib Charts Display Grid -->
+            <div class="analytics-grid">
+                <!-- Chart 1: Product-wise -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title">
+                            <span>📊</span> Product-Wise Sales Graph (Matplotlib)
+                        </div>
+                    </div>
+                    <div class="chart-img-container" id="chart-product-container">
+                        <span style="color: var(--text-muted);">Generating Matplotlib chart...</span>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Category-wise -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title">
+                            <span>🍩</span> Category-Wise Sales Graph (Matplotlib)
+                        </div>
+                    </div>
+                    <div class="chart-img-container" id="chart-category-container">
+                        <span style="color: var(--text-muted);">Generating Matplotlib chart...</span>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Monthly sales graph -->
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title">
+                            <span>📈</span> Monthly Sales Revenue Trend (Matplotlib)
+                        </div>
+                    </div>
+                    <div class="chart-img-container" id="chart-monthly-container">
+                        <span style="color: var(--text-muted);">Generating Matplotlib chart...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Add Product Modal -->
+    <div class="modal-backdrop" id="modal-add-product">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Product</h3>
+                <button class="close-btn" onclick="closeModal('modal-add-product')">&times;</button>
+            </div>
+            <form id="form-add-product" onsubmit="handleAddProduct(event)">
+                <div class="form-group">
+                    <label class="form-label">Product ID (Unique)</label>
+                    <input type="text" id="add-product-id" class="form-control" placeholder="e.g. PRD115" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" id="add-product-name" class="form-control" placeholder="e.g. Wireless Mouse" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" id="add-product-category" class="form-control" placeholder="Electronics, Groceries, Clothing..." list="category-datalist" required>
+                    <datalist id="category-datalist"></datalist>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Unit Price ($)</label>
+                        <input type="number" step="0.01" min="0" id="add-product-price" class="form-control" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Initial Quantity</label>
+                        <input type="number" min="0" id="add-product-quantity" class="form-control" placeholder="0" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-product')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div class="modal-backdrop" id="modal-edit-product">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Product Details</h3>
+                <button class="close-btn" onclick="closeModal('modal-edit-product')">&times;</button>
+            </div>
+            <form id="form-edit-product" onsubmit="handleEditProduct(event)">
+                <input type="hidden" id="edit-product-id">
+                <div class="form-group">
+                    <label class="form-label">Product ID (Read-only)</label>
+                    <input type="text" id="edit-product-id-display" class="form-control" disabled style="opacity: 0.6;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" id="edit-product-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" id="edit-product-category" class="form-control" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Unit Price ($)</label>
+                        <input type="number" step="0.01" min="0" id="edit-product-price" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stock Quantity</label>
+                        <input type="number" min="0" id="edit-product-quantity" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-product')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Restock Modal -->
+    <div class="modal-backdrop" id="modal-restock">
+        <div class="modal-dialog" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📦 Restock Product</h3>
+                <button class="close-btn" onclick="closeModal('modal-restock')">&times;</button>
+            </div>
+            <form id="form-restock" onsubmit="handleQuickRestock(event)">
+                <input type="hidden" id="restock-product-id">
+                <div style="margin-bottom: 14px;">
+                    <div style="font-weight: 600; font-size: 1rem;" id="restock-product-name">Product Name</div>
+                    <div style="font-size: 0.82rem; color: var(--text-secondary);">Current Stock: <span id="restock-current-qty" class="mono-cell">0</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Quantity to Add</label>
+                    <input type="number" min="1" value="10" id="restock-add-qty" class="form-control" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-restock')">Cancel</button>
+                    <button type="submit" class="btn btn-emerald">Confirm Restock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bill Receipt Modal -->
+    <div class="modal-backdrop" id="modal-receipt">
+        <div class="modal-dialog" style="max-width: 480px; padding: 0; background: transparent; border: none;">
+            <div style="position: relative;">
+                <button class="close-btn" onclick="closeModal('modal-receipt')" style="position: absolute; right: 12px; top: 12px; z-index: 10; color: #000; font-size: 24px;">&times;</button>
+                <div id="receipt-modal-content" style="border-radius: 12px; overflow: hidden;">
+                    <!-- Rendered dynamic receipt -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain Exception / Error Modal -->
+    <div class="modal-backdrop" id="modal-exception">
+        <div class="modal-dialog" style="max-width: 440px; border-color: rgba(244, 63, 94, 0.4);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(244, 63, 94, 0.2);">
+                <h3 class="modal-title" style="color: #fb7185; display: flex; align-items: center; gap: 8px;">
+                    <span>⚠️</span> <span id="exception-modal-name">Exception Raised</span>
+                </h3>
+                <button class="close-btn" onclick="closeModal('modal-exception')">&times;</button>
+            </div>
+            <div style="padding: 10px 0 20px 0;">
+                <p id="exception-modal-message" style="color: #fecdd3; font-size: 0.95rem; line-height: 1.5;"></p>
+                <div id="exception-modal-details" style="margin-top: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-secondary);"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeModal('modal-exception')">Understood</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
